@@ -6,6 +6,9 @@ import ForgotPasswordForm from '../components/auth/ForgotPasswordForm';
 import RegisterForm from '../components/RegisterForm';
 import OrderHistory from '../components/profile/OrderHistory';
 import ChangePasswordForm from '../components/profile/ChangePasswordForm';
+import { orderService } from '../services/order.service';
+import { Order } from '../types';
+import { Alert, CircularProgress } from '@mui/material';
 
 type AuthView = 'login' | 'register' | 'forgot-password';
 
@@ -13,6 +16,29 @@ export default function Profile() {
   const { user, logout, isLoading } = useAuth();
   const navigate = useNavigate();
   const [authView, setAuthView] = useState<AuthView>('login');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!user) return;
+      
+      try {
+        setOrderLoading(true);
+        setOrderError(null);
+        const userOrders = await orderService.getUserOrders();
+        setOrders(userOrders);
+      } catch (error: any) {
+        console.error('Error fetching orders:', error);
+        setOrderError(error.message || 'Failed to fetch order history');
+      } finally {
+        setOrderLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [user]);
 
   // If loading, show loading spinner
   if (isLoading) {
@@ -106,7 +132,18 @@ export default function Profile() {
         {/* Order History */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h2 className="text-xl font-semibold mb-4">Order History</h2>
-          <OrderHistory orders={user.orderHistory || []} />
+          {orderError && (
+            <Alert severity="error" className="mb-4">
+              {orderError}
+            </Alert>
+          )}
+          {orderLoading ? (
+            <div className="flex justify-center py-8">
+              <CircularProgress />
+            </div>
+          ) : (
+            <OrderHistory orders={orders} />
+          )}
         </div>
 
         {/* Change Password */}

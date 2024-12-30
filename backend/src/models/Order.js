@@ -6,8 +6,15 @@ const orderItemSchema = new mongoose.Schema({
     ref: 'Product',
     required: true
   },
-  name: String,
-  price: Number,
+  name: {
+    type: String,
+    required: true
+  },
+  price: {
+    type: Number,
+    required: true,
+    min: 0
+  },
   quantity: {
     type: Number,
     required: true,
@@ -23,28 +30,36 @@ const orderSchema = new mongoose.Schema({
   },
   items: [orderItemSchema],
   shippingAddress: {
-    firstName: String,
-    lastName: String,
-    address: String,
-    city: String,
-    state: String,
-    zipCode: String,
-    country: String,
-    phone: String
+    fullName: {
+      type: String,
+      required: true
+    },
+    email: {
+      type: String,
+      required: true
+    },
+    address: {
+      type: String,
+      required: true
+    },
+    city: {
+      type: String,
+      required: true
+    },
+    phone: {
+      type: String,
+      required: true
+    }
   },
   paymentMethod: {
     type: String,
-    required: true
-  },
-  paymentResult: {
-    id: String,
-    status: String,
-    update_time: String,
-    email_address: String
+    required: true,
+    enum: ['Cash on Delivery']
   },
   totalPrice: {
     type: Number,
-    required: true
+    required: true,
+    min: 0
   },
   status: {
     type: String,

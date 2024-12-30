@@ -9,12 +9,15 @@ import {
 
 const router = express.Router();
 
+// All routes require authentication
 router.use(protect);
 
+// Create order and get user orders
 router.route('/')
   .post(createOrder)
   .get(getUserOrders);
 
+// Get specific order and update order status
 router.route('/:id')
   .get(getOrderById)
   .put(updateOrderStatus);

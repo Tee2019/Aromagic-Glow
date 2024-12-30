@@ -24,11 +24,32 @@ export interface User {
 }
 
 export interface Order {
-  id: string;
-  items: CartItem[];
-  total: number;
-  date: string;
+  _id: string;
+  user: string;
+  items: {
+    product: string;
+    name: string;
+    price: number;
+    quantity: number;
+  }[];
+  shippingAddress: {
+    fullName: string;
+    email: string;
+    address: string;
+    city: string;
+    phone: string;
+  };
+  paymentMethod: string;
+  paymentResult?: {
+    id: string;
+    status: string;
+    update_time: string;
+    email_address: string;
+  };
+  totalPrice: number;
   status: 'pending' | 'processing' | 'shipped' | 'delivered';
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CustomCandle {

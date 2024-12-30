@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { userService } from '../../services/user.service';
 
 export default function ChangePasswordForm() {
   const [formData, setFormData] = useState({
@@ -6,29 +7,53 @@ export default function ChangePasswordForm() {
     newPassword: '',
     confirmPassword: ''
   });
-  const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<{
+    type: 'idle' | 'success' | 'error';
+    message: string;
+  }>({ type: 'idle', message: '' });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (formData.newPassword !== formData.confirmPassword) {
-      setStatus('error');
+      setStatus({
+        type: 'error',
+        message: 'New passwords do not match'
+      });
       return;
     }
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setStatus('success');
-    setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    setIsSubmitting(true);
+    setStatus({ type: 'idle', message: '' });
+
+    try {
+      const response = await userService.changePassword({
+        currentPassword: formData.currentPassword,
+        newPassword: formData.newPassword
+      });
+
+      setStatus({
+        type: 'success',
+        message: response.message
+      });
+      setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (error: any) {
+      setStatus({
+        type: 'error',
+        message: error.message
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {status === 'success' && (
-        <p className="text-green-600 text-sm">Password updated successfully!</p>
-      )}
-      {status === 'error' && (
-        <p className="text-red-600 text-sm">Passwords do not match.</p>
+      {status.type !== 'idle' && (
+        <p className={`text-sm ${status.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+          {status.message}
+        </p>
       )}
 
       <div>
@@ -56,6 +81,7 @@ export default function ChangePasswordForm() {
           onChange={(e) => setFormData(prev => ({ ...prev, newPassword: e.target.value }))}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
           required
+          minLength={6}
         />
       </div>
 
@@ -70,14 +96,16 @@ export default function ChangePasswordForm() {
           onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
           required
+          minLength={6}
         />
       </div>
 
       <button
         type="submit"
-        className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700"
+        disabled={isSubmitting}
+        className="w-full bg-purple-600 text-white py-2 px-4 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        Update Password
+        {isSubmitting ? 'Updating...' : 'Update Password'}
       </button>
     </form>
   );

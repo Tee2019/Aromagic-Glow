@@ -4,17 +4,20 @@ import { Product } from '../types';
 import { useNavigate } from 'react-router-dom';
 import { useCartContext } from '../contexts/CartContext';
 import { useAuthContext } from '../contexts/AuthContext';
+import { useWishlistContext } from '../contexts/WishlistContext';
 
 interface ProductCardProps {
   product: Product;
-  onAddToWishlist: (product: Product) => void;
+  isInWishlist?: boolean;
 }
 
-export default function ProductCard({ product, onAddToWishlist }: ProductCardProps) {
+export default function ProductCard({ product, isInWishlist = false }: ProductCardProps) {
   const navigate = useNavigate();
-  const { addToCart, isLoading, error } = useCartContext();
+  const { addToCart } = useCartContext();
+  const { addToWishlist, removeFromWishlist } = useWishlistContext();
   const { isAuthenticated } = useAuthContext();
   const [isAdding, setIsAdding] = useState(false);
+  const [isWishlistUpdating, setIsWishlistUpdating] = useState(false);
   const [showAddedMessage, setShowAddedMessage] = useState(false);
   const [showLoginMessage, setShowLoginMessage] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -47,6 +50,34 @@ export default function ProductCard({ product, onAddToWishlist }: ProductCardPro
     }
   };
 
+  const handleWishlistAction = async () => {
+    if (!isAuthenticated) {
+      setShowLoginMessage(true);
+      setTimeout(() => {
+        setShowLoginMessage(false);
+        navigate('/profile');
+      }, 2000);
+      return;
+    }
+
+    setIsWishlistUpdating(true);
+    setActionError(null);
+    try {
+      if (isInWishlist) {
+        await removeFromWishlist(product._id);
+      } else {
+        await addToWishlist(product);
+      }
+    } catch (err: any) {
+      setActionError(err.message);
+      setTimeout(() => {
+        setActionError(null);
+      }, 3000);
+    } finally {
+      setIsWishlistUpdating(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden transition-transform hover:scale-105">
       <div
@@ -66,7 +97,7 @@ export default function ProductCard({ product, onAddToWishlist }: ProductCardPro
       <div className="p-4 pt-0 flex justify-between">
         <button
           onClick={handleAddToCart}
-          disabled={isAdding || isLoading}
+          disabled={isAdding}
           className="relative bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isAdding ? 'Adding...' : 'Add to Cart'}
@@ -87,10 +118,11 @@ export default function ProductCard({ product, onAddToWishlist }: ProductCardPro
           )}
         </button>
         <button
-          onClick={() => onAddToWishlist(product)}
-          className="text-gray-600 hover:text-purple-600"
+          onClick={handleWishlistAction}
+          disabled={isWishlistUpdating}
+          className={`text-gray-600 hover:text-purple-600 ${isInWishlist ? 'text-purple-600' : ''} ${isWishlistUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          <Heart className="h-6 w-6" />
+          <Heart className="h-6 w-6" fill={isInWishlist ? 'currentColor' : 'none'} />
         </button>
       </div>
     </div>

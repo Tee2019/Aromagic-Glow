@@ -5,12 +5,14 @@ import { useAuthContext } from '../contexts/AuthContext';
 import ShippingForm from '../components/checkout/ShippingForm';
 import { Box, Typography, Button, Container, Paper, Alert } from '@mui/material';
 import { Home as HomeIcon } from '@mui/icons-material';
+import { orderService } from '../services/order.service';
 
 export default function Checkout() {
   const { items, total, clearCart } = useCartContext();
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, user } = useAuthContext();
   const navigate = useNavigate();
   const [orderPlaced, setOrderPlaced] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isAuthenticated) {
     navigate('/profile');
@@ -39,11 +41,29 @@ export default function Checkout() {
 
   const handlePlaceOrder = async (shippingDetails: any) => {
     try {
-      // Place order logic here
+      setError(null);
+      // Create order data
+      const orderData = {
+        items: items.map(item => ({
+          product: item.productId,
+          quantity: item.quantity,
+          price: item.price,
+          name: item.name
+        })),
+        shippingAddress: shippingDetails,
+        paymentMethod: 'Cash on Delivery',
+        totalPrice: total
+      };
+
+      // Create order in backend
+      await orderService.createOrder(orderData);
+      
+      // Clear cart after successful order
       await clearCart();
       setOrderPlaced(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error placing order:', error);
+      setError(error.message || 'Failed to place order. Please try again.');
     }
   };
 
@@ -63,10 +83,10 @@ export default function Checkout() {
           <Button
             variant="contained"
             startIcon={<HomeIcon />}
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/profile')}
             sx={{ mt: 2 }}
           >
-            Return to Homepage
+            View Order History
           </Button>
         </Paper>
       </Container>
@@ -79,6 +99,11 @@ export default function Checkout() {
         <Typography variant="h4" gutterBottom>
           Checkout
         </Typography>
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>
             Order Summary

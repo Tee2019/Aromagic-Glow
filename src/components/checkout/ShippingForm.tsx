@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 export interface ShippingDetails {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
   address: string;
   city: string;
@@ -14,49 +14,54 @@ interface ShippingFormProps {
 }
 
 export default function ShippingForm({ onSubmit }: ShippingFormProps) {
+  const { user } = useAuthContext();
+  const [formData, setFormData] = useState<ShippingDetails>({
+    fullName: '',
+    email: '',
+    address: '',
+    city: '',
+    phone: ''
+  });
+
+  // Autofill user data when component mounts
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: user.name || '',
+        email: user.email || ''
+      }));
+    }
+  }, [user]);
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
-    
-    const shippingDetails: ShippingDetails = {
-      firstName: formData.get('firstName') as string,
-      lastName: formData.get('lastName') as string,
-      email: formData.get('email') as string,
-      address: formData.get('address') as string,
-      city: formData.get('city') as string,
-      phone: formData.get('phone') as string
-    };
+    onSubmit(formData);
+  };
 
-    onSubmit(shippingDetails);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-            First Name
-          </label>
-          <input
-            type="text"
-            id="firstName"
-            name="firstName"
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-            Last Name
-          </label>
-          <input
-            type="text"
-            id="lastName"
-            name="lastName"
-            required
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
-          />
-        </div>
+      <div>
+        <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
+          Full Name
+        </label>
+        <input
+          type="text"
+          id="fullName"
+          name="fullName"
+          value={formData.fullName}
+          onChange={handleChange}
+          required
+          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
+        />
       </div>
 
       <div>
@@ -67,6 +72,8 @@ export default function ShippingForm({ onSubmit }: ShippingFormProps) {
           type="email"
           id="email"
           name="email"
+          value={formData.email}
+          onChange={handleChange}
           required
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
         />
@@ -80,6 +87,8 @@ export default function ShippingForm({ onSubmit }: ShippingFormProps) {
           type="text"
           id="address"
           name="address"
+          value={formData.address}
+          onChange={handleChange}
           required
           className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
         />
@@ -94,6 +103,8 @@ export default function ShippingForm({ onSubmit }: ShippingFormProps) {
             type="text"
             id="city"
             name="city"
+            value={formData.city}
+            onChange={handleChange}
             required
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
           />
@@ -106,6 +117,8 @@ export default function ShippingForm({ onSubmit }: ShippingFormProps) {
             type="tel"
             id="phone"
             name="phone"
+            value={formData.phone}
+            onChange={handleChange}
             required
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500"
           />

@@ -15,10 +15,10 @@ export default function OrderHistory({ orders }: OrderHistoryProps) {
   return (
     <div className="space-y-4">
       {orders.map((order) => (
-        <div key={order.id} className="bg-white p-4 rounded-lg shadow">
+        <div key={order._id} className="bg-white p-4 rounded-lg shadow">
           <div className="flex justify-between items-start mb-4">
             <div>
-              <h3 className="font-semibold">Order #{order.id}</h3>
+              <h3 className="font-semibold">Order #{order._id.slice(-6)}</h3>
               <p className="text-sm text-gray-600">
                 {new Date(order.createdAt).toLocaleDateString()}
               </p>
@@ -40,7 +40,7 @@ export default function OrderHistory({ orders }: OrderHistoryProps) {
           <div className="mt-4 pt-4 border-t">
             <div className="flex justify-between font-medium">
               <span>Total</span>
-              <span>${order.total.toFixed(2)}</span>
+              <span>${order.totalPrice.toFixed(2)}</span>
             </div>
           </div>
         </div>
